@@ -9,13 +9,41 @@ there is no OpenAI integration or API-key requirement in this stage.
 The intended stakeholder is Kehinde Adesina. His screening rules have not been
 supplied, and the example symbols do not represent his trading process.
 
+## Open SIFTR from a new computer
+
+For the hosted website, you only need an internet connection and a web browser.
+You do not need to install Python, Git, or SIFTR, clone this repository, or
+provide an API key.
+
+**Website address:** a verified deployed SIFTR URL has not yet been added to
+this README. Ask the project owner for the exact website address before
+following the steps below. The GitHub repository URL opens the source code;
+it does not open the running dashboard.
+
+1. Open your web browser on the new computer.
+2. Paste the SIFTR website address shared by the project owner into the address
+   bar and press Enter. Use the deployed app's complete URL, including
+   `https://`; a Community Cloud address ends in `.streamlit.app`.
+3. Wait for the SIFTR dashboard to load. If access requires an invitation or
+   sign-in, ask the owner for access and follow the on-screen instructions.
+4. Open **Market Data** in the sidebar, then follow
+   [How to use the website](#how-to-use-the-website) below. Bookmark the
+   website address so you can return to it.
+
+`http://127.0.0.1:8501` works only after a SIFTR server has been started on
+that same computer. It is not a hosted website address to share with another
+machine. To run your own local copy, first install Python 3.12 and Git, then
+follow the standalone clone/setup/launch commands in
+[Source repository and Community Cloud](#source-repository-and-community-cloud).
+Those installation steps are optional for hosted-website visitors.
+
+If no hosted address is available, the owner must deploy the app using that
+section's Community Cloud instructions and share the assigned URL. Publishing
+source code to GitHub alone does not establish a running website.
+
 ## How to use the website
 
-These steps are for someone using the running SIFTR website. No Python setup,
-GitHub account, or API key is needed to use an already accessible dashboard.
-Open the deployed app's URL, or `http://127.0.0.1:8501` if you are running it
-locally. Deployment instructions are in
-[Source repository and Community Cloud](#source-repository-and-community-cloud).
+After opening SIFTR using the access instructions above:
 
 1. **Open Market Data.** Use the **Workspace** navigation in the left sidebar.
    On a smaller screen, expand the sidebar to access navigation and inputs.
