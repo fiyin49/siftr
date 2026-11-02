@@ -9,6 +9,66 @@ there is no OpenAI integration or API-key requirement in this stage.
 The intended stakeholder is Kehinde Adesina. His screening rules have not been
 supplied, and the example symbols do not represent his trading process.
 
+## How to use the website
+
+These steps are for someone using the running SIFTR website. No Python setup,
+GitHub account, or API key is needed to use an already accessible dashboard.
+Open the deployed app's URL, or `http://127.0.0.1:8501` if you are running it
+locally. Deployment instructions are in
+[Source repository and Community Cloud](#source-repository-and-community-cloud).
+
+1. **Open Market Data.** Use the **Workspace** navigation in the left sidebar.
+   On a smaller screen, expand the sidebar to access navigation and inputs.
+2. **Enter your watchlist.** In **Yahoo symbols**, enter comma-separated
+   symbols such as `AAPL, MSFT, NVDA`. You can use up to 10 unique symbols.
+   Spaces and letter case are normalized, duplicates are removed, and Yahoo
+   punctuation such as `BRK-B` is preserved.
+3. **Choose a historical period.** The default is **6 months**. Choose another
+   preset, or select **Custom** to edit **Start date** and **End date
+   (inclusive)**. Start must be on or before end; future dates and ranges
+   longer than 1,830 days are rejected. Both dates are included when trading
+   observations exist; weekends and holidays may have no data.
+4. **Click Fetch market data.** Wait for the Yahoo request to finish. Opening
+   the website, editing inputs, or changing views does not automatically
+   download data. The example watchlist is editable, not a screening result.
+5. **Check Availability by symbol.** Review each symbol's status, number of
+   daily rows, first observation, latest observation, and explanatory message.
+   Successful symbols remain available if another symbol fails. Compare the
+   requested dates with the actual available coverage and the last successful
+   fetch timestamp. Daily observation dates are separate from fetch time;
+   these are not real-time quotes.
+6. **Explore prices and volume.** Under **Explore history**, choose an
+   **Inspect symbol** value. Hover over the interactive price and aligned
+   volume charts to inspect a date. Alternatively, open **Stock Details**
+   from the sidebar to inspect the selected stock. Your watchlist, retrieved
+   dataset, requested period, and selected symbol carry between views without
+   another download. Prices are split- and dividend-adjusted; volume is
+   provider-reported, and missing values remain missing.
+7. **Download the dataset.** In **Market Data**, scroll to **Retrieved
+   dataset** to preview recent rows, then click **Download retrieved CSV**.
+   The CSV includes all retrieved rows, symbols, dates, OHLCV values, and
+   source/period/adjustment/fetch-time metadata. It exports the current
+   snapshot; changing sidebar inputs alone does not change that snapshot.
+8. **Refresh when needed.** Clicking **Fetch market data** again with the
+   same inputs may reuse the application's 15-minute cache. Click **Refresh
+   from Yahoo** to bypass the matching cache entry for the current sidebar
+   settings. Check the displayed fetch time and cache label afterward. If a
+   fetch or refresh fails, any previous successful snapshot remains available
+   with a **STALE RETAINED DATA** warning.
+
+**If something goes wrong:** inspect the per-symbol messages. Check unsupported
+or mistyped symbols, choose a range containing trading days, and correct invalid
+dates before retrying. For connection failures, check your connection and try
+again; for Yahoo throttling, wait several minutes before refreshing. No sample
+data is substituted for failed requests. If the sidebar settings differ from
+the snapshot, click **Fetch market data** to apply them.
+
+**What is available now:** Market Data and the basic price/volume portion of
+Stock Details. **Screener** and **AI Report** show planned functionality only;
+they do not yet screen stocks or generate reports. Data persists while moving
+between views in the same session; a new session or server restart may require
+another fetch.
+
 ## Requirements and setup
 
 Use Windows PowerShell and Python 3.11 or later; development uses Python
@@ -128,38 +188,6 @@ The root `.streamlit/config.toml` and `requirements.txt` follow Streamlit's
 [repository layout guidance](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/file-organization).
 The recorded verification below covers the local application; Community Cloud
 deployment requires its own running-app and live-data check.
-
-## Example walkthrough
-
-1. Open **Market Data**. Keep the editable `AAPL, MSFT, NVDA` examples and the
-   default six-month period, then select **Fetch market data** in the sidebar.
-   Merely opening the application does not request market data.
-2. Inspect the per-symbol availability summary and data preview. The dashboard
-   distinguishes the requested period, actual returned coverage, latest daily
-   observation, and successful fetch time. A symbol with no usable history is
-   identified separately, while successful symbols remain available.
-3. Select **Stock Details**, choose a successful symbol, and hover over its
-   interactive price and aligned volume charts. Changing the symbol or view
-   reuses the retrieved dataset. Return to **Market Data** to download its CSV.
-4. Fetch the same request again within 15 minutes to use the application's
-   matching cached result. Select **Refresh from Yahoo** to bypass that entry
-   for the current sidebar inputs. A failed refresh is reported; previously
-   retrieved data that is kept on screen is marked stale rather than presented
-   as a successful refresh.
-5. Try a custom range or punctuation such as `BRK-B`. Input is trimmed,
-   uppercased, and deduplicated. Yahoo may return no history for an unsupported
-   symbol or a period without trading sessions. The application does not
-   substitute example data when a request fails.
-6. Visit **Screener** and **AI Report** to see their planned scope. They do not
-   calculate screening results or generate reports in this stage.
-
-The watchlist is limited to 10 symbols and a requested span of at most 1,830
-days (five times 366 days). Daily data is requested only after an explicit
-fetch or refresh action. Period presets include one, three, and six months,
-one year, and year to date, plus a custom range.
-Both custom dates are inclusive: the data layer converts the requested end to
-Yahoo's exclusive next-day boundary. Weekends and exchange holidays need not
-have observations. The application rejects reversed dates and future dates.
 
 ## Data interpretation and limitations
 
