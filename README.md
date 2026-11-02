@@ -2,11 +2,12 @@
 
 **[Open SIFTR](https://siftrdash.streamlit.app/)** — use the dashboard in your browser.
 
-SIFTR is a browser dashboard for collecting historical stock data before later
-screening and research reporting. This first stage retrieves real daily Yahoo
-Finance data, summarizes availability, exports CSV, and charts a selected
-symbol's prices and volume. Screening and AI reporting are explicitly planned;
-there is no OpenAI integration or API-key requirement in this stage.
+SIFTR is a browser dashboard for historical stock data and company research.
+It retrieves daily Yahoo Finance data, summarizes availability, exports CSV,
+and charts a selected symbol's prices and volume. Its **AI Report** view also
+generates a watchlist report with company background and recent news grounded
+in retrieved evidence when the server has an OpenAI API key. Configurable
+stock screening remains planned.
 
 The intended stakeholder is Kehinde Adesina. His screening rules have not been
 supplied, and the example symbols do not represent his trading process.
@@ -14,8 +15,11 @@ supplied, and the example symbols do not represent his trading process.
 ## Open SIFTR from a new computer
 
 For the hosted website, you only need an internet connection and a web browser.
-You do not need to install Python, Git, or SIFTR, clone this repository, or
-provide an API key.
+You do not need to install Python, Git, or SIFTR, or clone this repository.
+Visitors do not enter an API key in the website. The owner configures report
+credentials on the server; without them, the AI Report view explains the
+missing setup. Hosted AI Report availability also requires deploying this
+version of the source.
 
 **Website address:** [https://siftrdash.streamlit.app/](https://siftrdash.streamlit.app/).
 The GitHub repository URL opens the source code; use the website link above
@@ -91,19 +95,61 @@ again; for Yahoo throttling, wait several minutes before refreshing. No sample
 data is substituted for failed requests. If the sidebar settings differ from
 the snapshot, click **Fetch market data** to apply them.
 
-**What is available now:** Market Data and the basic price/volume portion of
-Stock Details. **Screener** and **AI Report** show planned functionality only;
-they do not yet screen stocks or generate reports. Data persists while moving
-between views in the same session; a new session or server restart may require
-another fetch.
+**What is available now:** Market Data, the basic price/volume portion of
+Stock Details, and the company-background/recent-news AI Report described
+below. **Screener** remains planned and does not make screening decisions.
+Data and reports persist while moving between views in the same session; a
+new session or server restart may require retrieval or generation again.
+
+## Generate a company and news report
+
+1. Set the current watchlist in the sidebar, then open **AI Report**. This view
+   uses those current symbols and does not require a historical-price fetch.
+   Its news lookback is separate from the Market Data historical period.
+2. Set **News lookback (calendar days)** to 1 through 30 **UTC calendar days**.
+   The default is 7: today and the previous six UTC dates. For example, a
+   report requested on November 2, 2026 UTC covers October 27 through
+   November 2 inclusive.
+3. Select **Generate watchlist report**. The server retrieves company profiles
+   and recent Yahoo news, then asks the configured OpenAI model to summarize
+   the supplied evidence. Progress and per-company outcomes remain visible;
+   one symbol's failure does not discard successful company sections.
+4. Expand each company section. Compare its background and news summary with
+   the linked sources, publication dates, content-availability labels, and
+   retrieval/generation messages. Background uses the available name, ticker,
+   sector, industry, business description, and company website; missing fields
+   are identified. Explanations of why developments may matter are labeled as
+   inference. A provider failure is distinct from an empty result; neither
+   establishes that nothing happened to a company.
+5. Select **Download complete report as Markdown**. It records the watchlist,
+   requested news window, model, timestamps, company sections, and source links.
+   If the inputs change afterward, **Previous inputs** identifies the report
+   as belonging to its original settings; generate again to apply the new
+   ones. If a later attempt entirely fails, **Retained report** identifies the
+   previous completed report that remains available.
+
+Report retrieval and paid generation occur only after the explicit generation
+action. Moving between views, opening an expander, or downloading a report
+does not make another model call. Public Yahoo evidence is cached for 15
+minutes across sessions on the same server. Successful generated sections are
+reused privately within the current session when the actual evidence, model,
+and news window match. Failed generation is not cached. Expired or changed
+evidence, a changed model/window, a cleared session, or a failed section can
+require another paid request after another explicit generation action.
+
+The reporting feature explains company background and retrieved news. It does
+not apply stakeholder screening rules, rank the watchlist, or explain
+deterministic screening metrics; those remain future work.
 
 ## Requirements and setup
 
 Use Windows PowerShell and Python 3.11 or later; development uses Python
 3.12.10. An internet connection is needed for dependency installation and Yahoo
 requests. Direct dependencies are pinned in `requirements.txt`;
-`requirements-dev.txt` adds pytest. No paid data service, credentials, or
-private dataset is needed.
+`requirements-dev.txt` adds pytest. Historical market data needs no API key.
+AI report generation requires a server-side OpenAI API key with access to the
+configured model, sends the retrieved company/news evidence to OpenAI, and
+incurs API usage charges. No private dataset is needed.
 
 | Dependency | Pinned version | Purpose |
 | --- | --- | --- |
@@ -111,6 +157,8 @@ private dataset is needed.
 | pandas | 3.1.0 | Daily dates, tabular normalization, and CSV. |
 | Plotly | 7.1.0 | Interactive price and volume charts. |
 | yfinance | 1.7.0 | Yahoo Finance historical-data client. |
+| OpenAI Python SDK | 3.42.1 | Server-side, structured company/news report generation. |
+| Pydantic | 2.14.2 | Validation of generated report structure. |
 | pytest | 9.2.0 | Deterministic development checks. |
 
 Start in the existing `siftr` workspace root. For this checkout:
@@ -141,6 +189,28 @@ course workspace before launch; the data layer adds its `yfinance` child
 directory. The application's 15-minute request cache is held in memory.
 Dependency caches, runtime data, credentials, and installed environments are
 not submission artifacts.
+
+### Enable AI Report locally
+
+In the same PowerShell terminal used to launch SIFTR, run this before starting
+the server. The hidden prompt works in Windows PowerShell as well as PowerShell
+7 and keeps the key out of the command text:
+
+```powershell
+$secureApiKey = Read-Host 'OpenAI API key' -AsSecureString
+$env:OPENAI_API_KEY = [System.Net.NetworkCredential]::new('', $secureApiKey).Password
+Remove-Variable secureApiKey
+$env:OPENAI_MODEL = 'gpt-5.4-mini'
+```
+
+`OPENAI_MODEL` is optional; the default is `gpt-5.4-mini`. Use a model available
+to the owner's account that supports the structured response format used by
+the application. Model availability can change; consult the
+[official model reference](https://developers.openai.com/api/docs/models/gpt-5.4-mini).
+The app reads the key on the server. It provides no browser key-entry field
+and does not write credentials to the source tree. After stopping the server,
+remove the session variable with `Remove-Item Env:OPENAI_API_KEY` if desired.
+See the [official OpenAI authentication guidance](https://developers.openai.com/api/reference/overview#authentication).
 
 ## Launch from the siftr root
 
@@ -204,8 +274,18 @@ To host the repository with Streamlit Community Cloud:
    **Yup, I have an app**.
 2. Set **Repository** to `fiyin49/siftr`, **Branch** to `main`, and **Main file
    path** to `app.py`.
-3. Open **Advanced settings**, select **Python 3.12**, leave secrets empty, and
-   save. This stage requires no API keys or secrets.
+3. Open **Advanced settings** and select **Python 3.12**. To enable AI Report,
+   enter the following root-level values in the **Secrets** field, substituting
+   the owner's actual key there, then save:
+
+   ```toml
+   OPENAI_API_KEY = "your-server-api-key"
+   OPENAI_MODEL = "gpt-5.4-mini"
+   ```
+
+   These are server settings, not a file to commit. For the existing hosted
+   app, update its secrets through app settings. Top-level secrets become
+   environment variables; see [Streamlit secrets management](https://docs.streamlit.io/develop/concepts/connections/secrets-management).
 4. Select **Deploy** and inspect the build/runtime logs. Once the dashboard
    reports the app running, open its assigned URL and try a real Yahoo fetch.
    Yahoo can throttle or reject requests from cloud hosts, so local success
@@ -216,6 +296,43 @@ The root `.streamlit/config.toml` and `requirements.txt` follow Streamlit's
 [repository layout guidance](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/file-organization).
 The recorded verification below covers the local application; Community Cloud
 deployment requires its own running-app and live-data check.
+
+## Report evidence and limitations
+
+- **Bounded news retrieval:** for each company, the provider request asks for
+  its 20 latest news items. SIFTR filters by the requested UTC publication
+  window, removes duplicates, and uses at most five articles. Yahoo's recent
+  feed is not an exhaustive date-range archive, so a 30-day selection does not
+  guarantee 30 days of coverage.
+- **Content availability:** sources are labeled according to the retrieved
+  full content, description, or headline-only evidence. A headline-only item
+  is not presented as a full article read. The model receives only available
+  source material and must describe evidence gaps instead of filling them
+  from memory.
+- **Sources and citations:** generated references are checked against supplied
+  source IDs. The application renders links from validated source records,
+  rather than accepting model-invented URLs. This checks citation membership,
+  not whether every generated interpretation is correct; inspect the sources.
+- **Partial results:** unavailable profiles, news retrieval failures, no
+  in-window articles, invalid model output, and API failures are reported
+  separately. An empty news result means no usable items were retrieved from
+  that bounded feed, not that no relevant events occurred.
+- **Generation bounds:** each company request has a 45-second OpenAI timeout,
+  no automatic retries, and an output cap of 1,800 tokens. An incomplete or
+  invalid structured response is rejected, not displayed as a completed
+  briefing. A manual retry can incur another charge.
+- **Scope:** reports do not invent prices, screening metrics, news, sentiment,
+  or reputation claims. They describe the retrieved evidence and its limits.
+  News publication time, evidence fetch time, and report generation time are
+  distinct, labeled timestamps. The report is not a live market-data feed.
+
+If Yahoo news proves unsuitable, a concrete alternative is the
+[NewsAPI Everything endpoint](https://newsapi.org/docs/endpoints/everything),
+which supports keyword and date filtering and publication-time ordering.
+It requires a separate API key and integration, review of its plan and usage
+terms, and comparable source normalization. Its content field is truncated to
+200 characters where available; it does not promise full articles. NewsAPI is
+**not implemented** in SIFTR.
 
 ## Data interpretation and limitations
 
@@ -254,20 +371,26 @@ deployment requires its own running-app and live-data check.
 | File | Responsibility |
 | --- | --- |
 | `app.py` | Streamlit entry point; imports and launches the interface. |
-| `ui.py` | Navigation, session state, request cache and controls, status displays, CSV export, and charts. |
+| `ui.py` | Shared navigation/watchlist, market-data session state, request cache and controls, CSV export, and charts. |
 | `market_data.py` | Validated requests, Yahoo access, normalization, and per-symbol outcomes; reusable without Streamlit. |
+| `research_data.py` | Company-profile and recent-news retrieval, UTC-window filtering, source normalization, and evidence status. |
+| `reporting.py` | OpenAI report generation from supplied evidence, structured-output and citation validation, and Markdown rendering. |
+| `report_ui.py` | AI Report controls, progress, evidence/generation reuse, retained report state, company sections, and Markdown download. |
 | `.streamlit/config.toml` | Dashboard theme and Streamlit settings. |
 | `.gitignore` | Excludes credentials, installed environments, and runtime caches from the source repository. |
 | `tests/test_market_data.py` | Deterministic provider-normalization and failure tests using explicitly synthetic fixtures. |
 | `tests/test_app.py` | Application state and interaction checks without relying on Yahoo availability. |
+| `tests/test_research_data.py` | Deterministic profile/news retrieval, source normalization, and evidence-failure cases. |
+| `tests/test_reporting.py` | Deterministic model-output, citation, and report-rendering cases without paid calls. |
+| `tests/test_ai_report_ui.py` | Report-view setup, generation, reuse, navigation, and partial-result interactions. |
 
 The next stage is to obtain explicit stakeholder screening rules, implement
 deterministic metrics and explainable pass/fail results in a separate screening
-module, then review them with the stakeholder. A later reporting module can
-send verified data and calculated facts to OpenAI for explanation. It must not
-invent prices, metrics, news, sentiment, or company-reputation evidence;
-qualitative claims need supporting sources. No screening or reporting module
-is presented as implemented here.
+module, then review them with the stakeholder. The implemented reporting
+module currently summarizes retrieved company and news evidence. A future
+extension can also explain selected screening results after Python has
+calculated their metrics and decisions. It must retain source grounding and
+keep qualitative claims separate from deterministic calculations.
 
 ## Verification commands
 
@@ -318,6 +441,36 @@ mode result does not certify a final submission.
   guide, checker, packager, requirements registry, template configuration,
   root README, root brief, and existing evidence were unchanged. No final
   submission ZIP was created.
+
+### Report-feature verification - November 2, 2026
+
+- All **61 tests passed** in 5.63 seconds: 19 existing price-data checks,
+  19 research-data checks, 20 reporting checks, and 3 report-view AppTest
+  checks. Tests cover navigation, successful-generation reuse, changed-input
+  notices, missing configuration, per-company failures, provider normalization,
+  and citation/output validation. The installed OpenAI 3.42.1 SDK was exercised
+  with mocked HTTP responses, including structured-schema serialization and
+  `responses.parse` / `output_parsed`; this used no network or real API key.
+- A live Yahoo check at **2026-11-02 19:08 UTC** retrieved usable company
+  profiles for `AAPL`, `MSFT`, and `NVDA`. Each news request asked for 20 items
+  and returned an empty list for the October 27-November 2 report window. No
+  positive live news payload was available to verify its content shape;
+  synthetic provider fixtures cover supported nested and legacy formats.
+  Empty results do not establish that no recent company events occurred.
+- No local `OPENAI_API_KEY` was configured, so no paid live OpenAI generation
+  was attempted. Hosted/cloud AI generation also remains unverified; the owner
+  must configure server credentials and check a live report.
+- `pip check` reported no dependency conflicts. The server started on
+  `127.0.0.1:8520`, and both `/` and `/_stcore/health` returned HTTP 200.
+  No browser-control tool was available, so visual browser inspection was not
+  performed; AppTest provided programmatic interface verification.
+- The unchanged course checker passed in `format_test` mode with no errors,
+  warnings, or incomplete checks; all 16 supporting artifacts were registered.
+  SHA-256 comparison confirmed that protected course files were unchanged.
+  No student attestation was completed and no final ZIP was created.
+
+The October 30 record above preserves verification of the earlier
+historical-market-data stage.
 
 Implementation references: [Streamlit request caching](https://docs.streamlit.io/develop/api-reference/caching-and-state/st.cache_data),
 [yfinance download API](https://ranaroussi.github.io/yfinance/reference/api/yfinance.download.html),

@@ -98,7 +98,7 @@ def test_explicit_fetch_export_and_navigation_preserve_snapshot(monkeypatch):
         assert app.session_state["selected_symbol"] == "MSFT"
         assert app.session_state["watchlist"] == watchlist
         assert len(calls) == 1
-        if view in ("Screener", "AI Report"):
+        if view == "Screener":
             assert any("Planned functionality" in message.value for message in app.info)
     assert app.selectbox(key="chart_symbol").value == "MSFT"
 

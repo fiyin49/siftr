@@ -1,7 +1,7 @@
 """Streamlit interface, session state, request caching, charts, and CSV export.
 
-Only the two explicit sidebar actions call the reusable Yahoo data layer.
-Session data survives navigation; the in-memory request cache expires in 15 min.
+Only explicit actions retrieve data or generate reports. Session data survives
+navigation; the in-memory price request cache expires in 15 minutes.
 """
 
 from datetime import date, datetime, timezone
@@ -118,7 +118,7 @@ def sidebar() -> tuple[str, FetchRequest | None]:
             st.error(st.session_state.input_error)
         st.divider()
         st.caption("FIRST STAGE · Research prototype")
-        st.caption("Screening and AI reports are planned.")
+        st.caption("AI Report covers company background and news. Screening is planned.")
     return view, request
 
 
@@ -253,12 +253,8 @@ def market_view(result: FetchResult | None) -> None:
 def planned_view(view: str, result: FetchResult | None) -> None:
     st.subheader(view)
     st.info("Planned functionality · This view is not implemented in the first stage.")
-    if view == "Screener":
-        st.write("The next stage will add configurable screening rules, deterministic Python calculations, and a results table explaining each pass or failure.")
-        st.caption("Kehinde Adesina's exact rules have not been supplied. The example watchlist does not reproduce his screening process.")
-    else:
-        st.write("A later stage will generate downloadable research summaries from selected screening results and retrieved data.")
-        st.caption("No AI model is called in this prototype. Future reports will explain supplied facts; news, sentiment, and reputation claims require supporting sources.")
+    st.write("The next stage will add configurable screening rules, deterministic Python calculations, and a results table explaining each pass or failure.")
+    st.caption("Kehinde Adesina's exact rules have not been supplied. The example watchlist does not reproduce his screening process.")
     if result is not None:
         st.markdown("#### Your retained market snapshot")
         snapshot_context(result)
@@ -294,5 +290,9 @@ def main() -> None:
             snapshot_context(result)
             stock_inspector(result)
             st.caption("Screening metrics and explanations are planned for a later stage.")
+    elif view == "AI Report":
+        from report_ui import report_view
+
+        report_view()
     else:
         planned_view(view, result)
