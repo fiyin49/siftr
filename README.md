@@ -1,5 +1,7 @@
 # SIFTR prototype
 
+**[Open SIFTR](https://siftrdash.streamlit.app/)** — use the dashboard in your browser.
+
 SIFTR is a browser dashboard for collecting historical stock data before later
 screening and research reporting. This first stage retrieves real daily Yahoo
 Finance data, summarizes availability, exports CSV, and charts a selected
@@ -15,15 +17,13 @@ For the hosted website, you only need an internet connection and a web browser.
 You do not need to install Python, Git, or SIFTR, clone this repository, or
 provide an API key.
 
-**Website address:** a verified deployed SIFTR URL has not yet been added to
-this README. Ask the project owner for the exact website address before
-following the steps below. The GitHub repository URL opens the source code;
-it does not open the running dashboard.
+**Website address:** [https://siftrdash.streamlit.app/](https://siftrdash.streamlit.app/).
+The GitHub repository URL opens the source code; use the website link above
+to open the running dashboard.
 
 1. Open your web browser on the new computer.
-2. Paste the SIFTR website address shared by the project owner into the address
-   bar and press Enter. Use the deployed app's complete URL, including
-   `https://`; a Community Cloud address ends in `.streamlit.app`.
+2. Open [SIFTR](https://siftrdash.streamlit.app/), or paste
+   `https://siftrdash.streamlit.app/` into the address bar and press Enter.
 3. Wait for the SIFTR dashboard to load. If access requires an invitation or
    sign-in, ask the owner for access and follow the on-screen instructions.
 4. Open **Market Data** in the sidebar, then follow
@@ -37,9 +37,9 @@ follow the standalone clone/setup/launch commands in
 [Source repository and Community Cloud](#source-repository-and-community-cloud).
 Those installation steps are optional for hosted-website visitors.
 
-If no hosted address is available, the owner must deploy the app using that
-section's Community Cloud instructions and share the assigned URL. Publishing
-source code to GitHub alone does not establish a running website.
+If the hosted website is unavailable, ask the owner to check its Community
+Cloud deployment. Publishing source code to GitHub alone does not establish
+a running website.
 
 ## How to use the website
 
